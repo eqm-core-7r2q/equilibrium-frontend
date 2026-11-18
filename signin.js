@@ -11,6 +11,9 @@
   const ROOT = /^\/[A-Za-z0-9._-]+\/$/.test(CFG.root || "") ? CFG.root : null;
   const APP_MODE = !!ROOT && (location.pathname === ROOT + "app" || location.pathname.startsWith(ROOT + "app/"));
   const STAFF_MODE = APP_MODE && (location.pathname === ROOT + "app/admin" || location.pathname.startsWith(ROOT + "app/admin/"));   // storage serves that file to staff only
+  // <root>master opens the Master Admin console (item 69), for Equilibrium admins only
+  const MASTER_MODE = !!ROOT && (location.pathname === ROOT + "master" || location.pathname.startsWith(ROOT + "master/"));
+  const WHAT = MASTER_MODE ? "the admin console" : APP_MODE ? "the app" : "the rate engine";
   const REFRESH_KEY = "eq.refresh";   // tab-scoped; lets a reload stay signed in. This page keeps the access token in memory only
                                       // (the app, once it has the session, keeps it whole in the same tab-scoped storage).
   let session = null, refreshTimer = null, refreshing = null;
@@ -22,7 +25,7 @@
   };
 
   // `remember: false` keeps the session in memory only (used for a session that arrived in an email link, until its password is chosen)
-  const setSession = (s, remember = true) => {
+  const setSession = (s, remember = !MASTER_MODE) => {   // the admin console never writes its session to storage
     session = s && s.access_token ? { access_token: s.access_token, refresh_token: s.refresh_token, expires_at: Date.now() + (Number(s.expires_in) || 3600) * 1000, email: s.user && s.user.email } : null;
     clearTimeout(refreshTimer);
     try { if (session && session.refresh_token && remember) sessionStorage.setItem(REFRESH_KEY, session.refresh_token); else sessionStorage.removeItem(REFRESH_KEY); } catch { /* storage unavailable: stay signed in for this page load only */ }
@@ -74,10 +77,25 @@
     clearTimeout(refreshTimer); session = null;
     $("gate").hidden = true; root.hidden = false; msg("");
   };
+  // The admin console: the master door says whether this account holds an admin level; storage then serves the
+  // console's files to active admins only. This page keeps the session and hands the console a way to ask for the token.
+  const mountMaster = async () => {
+    const who = await fetch(URL_ + "/functions/v1/master", { method: "POST", headers: { apikey: KEY, "Content-Type": "application/json", Authorization: "Bearer " + (await getToken()) }, body: JSON.stringify({ action: "whoami" }) });
+    if (!who.ok) throw Object.assign(new Error("master"), { status: who.status });
+    const [css, code] = await Promise.all([storageGet("staff/master/styles.css"), storageGet("staff/master/entry.js")]);
+    const st = document.createElement("style"); st.textContent = css;
+    const root = $("app");
+    window.EQ_MASTER_BOOT = { functionsUrl: URL_ + "/functions/v1", apikey: KEY, getToken, signOut, root };
+    document.head.append(st);
+    try { await runScript(code); }
+    catch (e) { delete window.EQ_MASTER_BOOT; st.remove(); throw e; }
+    $("gate").hidden = true; root.hidden = false; msg("");
+  };
   const mount = async () => {
     msg("Loading…");
     try {
       if (STAFF_MODE) return await mountApp("admin");
+      if (MASTER_MODE) return await mountMaster();
       // which tier this user belongs to comes from the pricing API; storage then serves only the common files and that tier's view
       const sres = await fetch(URL_ + "/functions/v1/pricing/session", { headers: { apikey: KEY, Authorization: "Bearer " + (await getToken()) } });
       if (!sres.ok) throw Object.assign(new Error("session"), { status: sres.status });
@@ -95,8 +113,8 @@
       window.EQ.start(root);
     } catch (e) {
       if (e && e.status === 401) { setSession(null); $("signin").hidden = false; msg("Your session has ended. Sign in again.", true); }
-      else if (e && (e.status === 400 || e.status === 403 || e.status === 404)) msg("This account is signed in but has no access to " + (APP_MODE ? "the app" : "the rate engine") + ". Contact Equilibrium.", true);
-      else msg((APP_MODE ? "The app" : "The rate engine") + " could not be loaded. Try again in a minute.", true);
+      else if (e && (e.status === 400 || e.status === 403 || e.status === 404)) msg("This account is signed in but has no access to " + WHAT + ". Contact Equilibrium.", true);
+      else msg(WHAT.charAt(0).toUpperCase() + WHAT.slice(1) + " could not be loaded. Try again in a minute.", true);
     }
   };
 
@@ -109,7 +127,7 @@
     try {
       const r = await call("/auth/v1/token?grant_type=password", { body: { email, password } });
       if (!r.ok) return msg(r.status === 429 ? "Too many attempts. Wait a minute and try again." : "That email and password did not match.", true);
-      setSession(r.data); $("password").value = ""; await mount();
+      setSession(r.data, !MASTER_MODE); $("password").value = ""; await mount();   // the admin console keeps its session in memory only: a reload signs in again
     } catch { msg("Could not reach the server. Check your connection.", true); }
     finally { $("signin-btn").disabled = false; }
   });
@@ -128,7 +146,7 @@
       const r = await call("/auth/v1/user", { method: "PUT", body: { password: a }, token: await getToken() });
       if (!r.ok) return msg(r.status === 422 ? "That password was not accepted. Choose a longer or different one." : "The password could not be saved. Open the link from your email again.", true);
       $("pw1").value = ""; $("pw2").value = ""; $("setpw").hidden = true;
-      try { if (session && session.refresh_token) sessionStorage.setItem(REFRESH_KEY, session.refresh_token); } catch { /* stays in memory */ }   // only now is the link's session remembered
+      try { if (session && session.refresh_token && !MASTER_MODE) sessionStorage.setItem(REFRESH_KEY, session.refresh_token); } catch { /* stays in memory */ }   // only now is the link's session remembered
       await mount();
     } catch { msg("Could not reach the server. Check your connection.", true); }
     finally { $("setpw-btn").disabled = false; }
@@ -151,6 +169,6 @@
       return;
     }
     if (hash.get("error_description")) msg("That link has expired or was already used. Ask Equilibrium for a new one.", true);
-    if (await refresh().catch(() => false)) { $("signin").hidden = true; await mount(); if ($("app").hidden && !window.EQ_APP_BOOT) $("signin").hidden = false; }
+    if (!MASTER_MODE && await refresh().catch(() => false)) { $("signin").hidden = true; await mount(); if ($("app").hidden && !window.EQ_APP_BOOT) $("signin").hidden = false; }
   })();
 })();
