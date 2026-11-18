@@ -1,5 +1,6 @@
 // Equilibrium sign-in page. This is everything the public site contains: a form, and a loader that fetches the
-// rate engine's screens from private storage with the signed-in user's token. No pricing, no screens, no secrets.
+// screens from private storage with the signed-in user's token: the rate engine, or under <root>app the
+// app. No pricing, no screens, no secrets.
 (() => {
   "use strict";
   if (window.top !== window.self) { document.documentElement.hidden = true; return; }   // never run inside a frame
@@ -7,7 +8,10 @@
   const URL_ = String(CFG.supabaseUrl || "").replace(/\/+$/, ""), KEY = CFG.publishableKey || "";
   const $ = (id) => document.getElementById(id);
   const msg = (text, isError) => { const m = $("msg"); m.textContent = text || ""; m.hidden = !text; m.className = "msg" + (isError ? " err" : ""); };
-  const REFRESH_KEY = "eq.refresh";   // tab-scoped; lets a reload stay signed in. The access token stays in memory only.
+  const ROOT = /^\/[A-Za-z0-9._-]+\/$/.test(CFG.root || "") ? CFG.root : null;
+  const APP_MODE = !!ROOT && (location.pathname === ROOT + "app" || location.pathname.startsWith(ROOT + "app/"));
+  const REFRESH_KEY = "eq.refresh";   // tab-scoped; lets a reload stay signed in. This page keeps the access token in memory only
+                                      // (the app, once it has the session, keeps it whole in the same tab-scoped storage).
   let session = null, refreshTimer = null, refreshing = null;
 
   const call = async (path, { method = "POST", body, token } = {}) => {
@@ -55,6 +59,20 @@
     s.onload = () => { URL.revokeObjectURL(url); resolve(); }; s.onerror = () => { URL.revokeObjectURL(url); reject(new Error("script")); };
     document.head.append(s);
   });
+  // The app: one file per tenant type; storage serves a member only their own type's. The app then keeps the
+  // session fresh itself and keeps this page's copy of the refresh token current, so this page stops refreshing.
+  const mountApp = async (tier) => {
+    const code = await storageGet(tier + "/mobile/entry.js");
+    await getToken();
+    const st = document.createElement("style"); st.textContent = "html,body{height:100%}body{overflow:hidden}#root{display:flex;height:100%;flex:1}";
+    const root = document.createElement("div"); root.id = "root"; root.hidden = true;
+    window.EQ_APP_BOOT = { session: { access_token: session.access_token, refresh_token: session.refresh_token }, home: ROOT + "app/" };
+    document.head.append(st); document.body.append(root);
+    try { await runScript(code); }
+    catch (e) { delete window.EQ_APP_BOOT; st.remove(); root.remove(); throw e; }   // nothing was handed over: the form and its message stay
+    clearTimeout(refreshTimer); session = null;
+    $("gate").hidden = true; root.hidden = false; msg("");
+  };
   const mount = async () => {
     msg("Loading…");
     try {
@@ -63,6 +81,7 @@
       if (!sres.ok) throw Object.assign(new Error("session"), { status: sres.status });
       const tier = String((await sres.json()).tenant_type || "");
       if (!TIERS.test(tier)) throw Object.assign(new Error("tier"), { status: 403 });
+      if (APP_MODE) return await mountApp(tier);
       const manifest = JSON.parse(await storageGet(tier + "/manifest.json"));
       const [shell, styles, scripts] = await Promise.all([storageGet(manifest.shell), Promise.all(manifest.styles.map(storageGet)), Promise.all(manifest.scripts.map(storageGet))]);
       for (const css of styles) { const st = document.createElement("style"); st.textContent = css; document.head.append(st); }
@@ -74,8 +93,8 @@
       window.EQ.start(root);
     } catch (e) {
       if (e && e.status === 401) { setSession(null); $("signin").hidden = false; msg("Your session has ended. Sign in again.", true); }
-      else if (e && (e.status === 400 || e.status === 403 || e.status === 404)) msg("This account is signed in but has no access to the rate engine. Contact Equilibrium.", true);
-      else msg("The rate engine could not be loaded. Try again in a minute.", true);
+      else if (e && (e.status === 400 || e.status === 403 || e.status === 404)) msg("This account is signed in but has no access to " + (APP_MODE ? "the app" : "the rate engine") + ". Contact Equilibrium.", true);
+      else msg((APP_MODE ? "The app" : "The rate engine") + " could not be loaded. Try again in a minute.", true);
     }
   };
 
@@ -130,6 +149,6 @@
       return;
     }
     if (hash.get("error_description")) msg("That link has expired or was already used. Ask Equilibrium for a new one.", true);
-    if (await refresh().catch(() => false)) { $("signin").hidden = true; await mount(); if ($("app").hidden) $("signin").hidden = false; }
+    if (await refresh().catch(() => false)) { $("signin").hidden = true; await mount(); if ($("app").hidden && !window.EQ_APP_BOOT) $("signin").hidden = false; }
   })();
 })();

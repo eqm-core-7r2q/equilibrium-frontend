@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow, noarchive">
+<meta name="referrer" content="no-referrer">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; connect-src https://oeowlixiszataujdfwvj.supabase.co; script-src 'self' blob:; style-src 'unsafe-inline'; img-src data:; base-uri 'none'; form-action 'none'">
+<title>Equilibrium — sign in</title>
+<style>
+  :root { color-scheme: light; }
+  body { margin: 0; font-family: Inter, system-ui, -apple-system, "Segoe UI", sans-serif; color: #10171F; background: #F3F6F8; }
+  .gate { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px; box-sizing: border-box; }
+  .card { width: 100%; max-width: 400px; background: #fff; border: 1px solid #DCE3EA; border-radius: 16px; padding: 28px; box-sizing: border-box; display: flex; flex-direction: column; gap: 16px; }
+  .brand { display: flex; align-items: center; gap: 10px; font-family: "Space Grotesk", Inter, system-ui, sans-serif; font-weight: 700; font-size: 22px; }
+  h1 { font-family: "Space Grotesk", Inter, system-ui, sans-serif; font-size: 24px; margin: 0; }
+  label { display: flex; flex-direction: column; gap: 6px; font-size: 12px; font-weight: 600; color: #44505E; letter-spacing: .02em; text-transform: uppercase; }
+  input { height: 44px; border: 1px solid #C7D0DA; border-radius: 8px; padding: 0 12px; font: inherit; font-size: 16px; text-transform: none; letter-spacing: 0; color: #10171F; background: #fff; }
+  input:focus-visible, button:focus-visible, a:focus-visible { outline: 3px solid #0F766E; outline-offset: 2px; }
+  button { height: 48px; border: 0; border-radius: 8px; font: inherit; font-size: 15px; font-weight: 700; cursor: pointer; background: #0F766E; color: #fff; }
+  button[disabled] { opacity: .6; cursor: default; }
+  button.link { background: none; color: #0F766E; height: 44px; font-weight: 600; text-align: left; padding: 0; }
+  .msg { font-size: 14px; line-height: 1.45; color: #44505E; margin: 0; }
+  .msg.err { color: #9A2F1F; }
+  .fine { font-size: 12px; color: #5B6673; line-height: 1.5; margin: 0; border-top: 1px solid #DCE3EA; padding-top: 14px; }
+  [hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<div class="gate" id="gate">
+  <main class="card">
+    <div class="brand">
+      <svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true"><path d="M4 20 L15 6 L26 20" fill="none" stroke="#0F766E" stroke-width="2.5" stroke-linejoin="round"/><line x1="2" y1="24" x2="28" y2="24" stroke="#0F766E" stroke-width="2.5"/></svg>
+      <span>Equilibrium</span>
+    </div>
+
+    <form id="signin" novalidate>
+      <div style="display:flex;flex-direction:column;gap:16px">
+        <h1>Sign in</h1>
+        <label for="email">Email<input id="email" type="email" autocomplete="username" required></label>
+        <label for="password">Password<input id="password" type="password" autocomplete="current-password" required></label>
+        <button type="submit" id="signin-btn">Sign in</button>
+        <button type="button" class="link" id="forgot">Forgot password</button>
+      </div>
+    </form>
+
+    <form id="setpw" novalidate hidden>
+      <div style="display:flex;flex-direction:column;gap:16px">
+        <h1>Choose your password</h1>
+        <p class="msg" id="setpw-who"></p>
+        <label for="pw1">New password<input id="pw1" type="password" autocomplete="new-password" minlength="12" required></label>
+        <label for="pw2">Repeat it<input id="pw2" type="password" autocomplete="new-password" minlength="12" required></label>
+        <button type="submit" id="setpw-btn">Save and continue</button>
+      </div>
+    </form>
+
+    <p class="msg" id="msg" role="status" aria-live="polite" hidden></p>
+    <p class="fine">Accounts are created by Equilibrium. There is no sign-up here.</p>
+  </main>
+</div>
+<div id="app" hidden></div>
+<script src="/equilibrium-frontend/config.js"></script>
+<script src="/equilibrium-frontend/signin.js"></script>
+</body>
+</html>
