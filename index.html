@@ -7,19 +7,20 @@
 <meta name="referrer" content="no-referrer">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; connect-src https://oeowlixiszataujdfwvj.supabase.co; script-src 'self' blob:; style-src 'unsafe-inline'; img-src data:; base-uri 'none'; form-action 'none'">
 <title>Equilibrium — sign in</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230B1220'/%3E%3Cg transform='translate(10 10) scale(.6875)' %3E%3Crect x='5' y='6' width='12' height='52' fill='%23FFFFFF'/%3E%3Crect x='5' y='6' width='23' height='12' fill='%23FFFFFF'/%3E%3Crect x='5' y='26' width='23' height='12' fill='%23FFFFFF'/%3E%3Crect x='5' y='46' width='23' height='12' fill='%23FFFFFF'/%3E%3Crect x='47' y='6' width='12' height='52' fill='%232EE6A6'/%3E%3Crect x='36' y='6' width='23' height='12' fill='%232EE6A6'/%3E%3Crect x='36' y='26' width='23' height='12' fill='%232EE6A6'/%3E%3Crect x='36' y='46' width='23' height='12' fill='%232EE6A6'/%3E%3C/g%3E%3C/svg%3E">
 <style>
   :root { color-scheme: light; }
-  body { margin: 0; font-family: Inter, system-ui, -apple-system, "Segoe UI", sans-serif; color: #10171F; background: #F3F6F8; }
+  body { margin: 0; font-family: Inter, system-ui, -apple-system, "Segoe UI", sans-serif; color: #0B1220; background: #F3F6F8; }
   .gate { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px; box-sizing: border-box; }
   .card { width: 100%; max-width: 400px; background: #fff; border: 1px solid #DCE3EA; border-radius: 16px; padding: 28px; box-sizing: border-box; display: flex; flex-direction: column; gap: 16px; }
-  .brand { display: flex; align-items: center; gap: 10px; font-family: "Space Grotesk", Inter, system-ui, sans-serif; font-weight: 700; font-size: 22px; }
+  .brand { display: flex; align-items: center; gap: 10px; font-family: "Space Grotesk", Inter, system-ui, sans-serif; font-weight: 700; font-size: 22px; letter-spacing: -.02em; }
   h1 { font-family: "Space Grotesk", Inter, system-ui, sans-serif; font-size: 24px; margin: 0; }
   label { display: flex; flex-direction: column; gap: 6px; font-size: 12px; font-weight: 600; color: #44505E; letter-spacing: .02em; text-transform: uppercase; }
-  input { height: 44px; border: 1px solid #C7D0DA; border-radius: 8px; padding: 0 12px; font: inherit; font-size: 16px; text-transform: none; letter-spacing: 0; color: #10171F; background: #fff; }
-  input:focus-visible, button:focus-visible, a:focus-visible { outline: 3px solid #0F766E; outline-offset: 2px; }
-  button { height: 48px; border: 0; border-radius: 8px; font: inherit; font-size: 15px; font-weight: 700; cursor: pointer; background: #0F766E; color: #fff; }
+  input { height: 44px; border: 1px solid #C7D0DA; border-radius: 8px; padding: 0 12px; font: inherit; font-size: 16px; text-transform: none; letter-spacing: 0; color: #0B1220; background: #fff; }
+  input:focus-visible, button:focus-visible, a:focus-visible { outline: 3px solid #00A870; outline-offset: 2px; }
+  button { height: 48px; border: 0; border-radius: 8px; font: inherit; font-size: 15px; font-weight: 700; cursor: pointer; background: #0B1220; color: #fff; }
   button[disabled] { opacity: .6; cursor: default; }
-  button.link { background: none; color: #0F766E; height: 44px; font-weight: 600; text-align: left; padding: 0; }
+  button.link { background: none; color: #007A52; height: 44px; font-weight: 600; text-align: left; padding: 0; }
   .msg { font-size: 14px; line-height: 1.45; color: #44505E; margin: 0; }
   .msg.err { color: #9A2F1F; }
   .fine { font-size: 12px; color: #5B6673; line-height: 1.5; margin: 0; border-top: 1px solid #DCE3EA; padding-top: 14px; }
@@ -30,7 +31,7 @@
 <div class="gate" id="gate">
   <main class="card">
     <div class="brand">
-      <svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true"><path d="M4 20 L15 6 L26 20" fill="none" stroke="#0F766E" stroke-width="2.5" stroke-linejoin="round"/><line x1="2" y1="24" x2="28" y2="24" stroke="#0F766E" stroke-width="2.5"/></svg>
+      <svg width="32" height="32" viewBox="0 0 64 64" aria-hidden="true"><rect x="5" y="6" width="12" height="52" fill="#0B1220"/><rect x="5" y="6" width="23" height="12" fill="#0B1220"/><rect x="5" y="26" width="23" height="12" fill="#0B1220"/><rect x="5" y="46" width="23" height="12" fill="#0B1220"/><rect x="47" y="6" width="12" height="52" fill="#00A870"/><rect x="36" y="6" width="23" height="12" fill="#00A870"/><rect x="36" y="26" width="23" height="12" fill="#00A870"/><rect x="36" y="46" width="23" height="12" fill="#00A870"/></svg>
       <span>Equilibrium</span>
     </div>
 
