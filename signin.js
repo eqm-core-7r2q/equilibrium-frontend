@@ -8,7 +8,7 @@
   const URL_ = String(CFG.supabaseUrl || "").replace(/\/+$/, ""), KEY = CFG.publishableKey || "";
   const $ = (id) => document.getElementById(id);
   const msg = (text, isError) => { const m = $("msg"); m.textContent = text || ""; m.hidden = !text; m.className = "msg" + (isError ? " err" : ""); };
-  const ROOT = /^\/[A-Za-z0-9._-]+\/$/.test(CFG.root || "") ? CFG.root : null;
+  const ROOT = /^\/([A-Za-z0-9._-]+\/)?$/.test(CFG.root || "") ? CFG.root : null;   // "/" on a domain of its own, "/repo-name/" under a shared one
   const APP_MODE = !!ROOT && (location.pathname === ROOT + "app" || location.pathname.startsWith(ROOT + "app/"));
   const STAFF_MODE = APP_MODE && (location.pathname === ROOT + "app/admin" || location.pathname.startsWith(ROOT + "app/admin/"));   // storage serves that file to staff only
   // <root>master opens the Master Admin console (item 69), for Equilibrium admins only
