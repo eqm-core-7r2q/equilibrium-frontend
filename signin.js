@@ -140,11 +140,13 @@
     e.preventDefault(); msg("");
     const a = $("pw1").value, b = $("pw2").value;
     if (a.length < 12) return msg("Use at least 12 characters.", true);
+    let bytes = a.length * 3; try { bytes = encodeURIComponent(a).replace(/%[0-9A-F]{2}/g, "x").length; } catch { /* counted as too long */ }
+    if (bytes > 72) return msg("Use 72 characters or fewer. Longer passwords are not accepted.", true);
     if (a !== b) return msg("The two passwords are not the same.", true);
     $("setpw-btn").disabled = true;
     try {
       const r = await call("/auth/v1/user", { method: "PUT", body: { password: a }, token: await getToken() });
-      if (!r.ok) return msg(r.status === 422 ? "That password was not accepted. Choose a longer or different one." : "The password could not be saved. Open the link from your email again.", true);
+      if (!r.ok) return msg(r.status === 422 || r.status === 400 ? "That password was not accepted. Choose a different one, 12 to 72 characters." : "The password could not be saved. Open the link from your email again.", true);
       $("pw1").value = ""; $("pw2").value = ""; $("setpw").hidden = true;
       try { if (session && session.refresh_token && !MASTER_MODE) sessionStorage.setItem(REFRESH_KEY, session.refresh_token); } catch { /* stays in memory */ }   // only now is the link's session remembered
       await mount();
